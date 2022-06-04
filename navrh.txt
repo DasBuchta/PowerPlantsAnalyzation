@@ -1,0 +1,23 @@
+Navrh projektu
+-----------------------------
+
+Analyza roznych elektrarni, ich vykonnost, ucinnost, pouzivane paliva
+
+Data ziskam z tejto stranky: https://datasets.wri.org/dataset/globalpowerplantdatabase (Global Power Plant Database v1.3.0)
+
+Budem porovnavat, ake vykonne su elektrarne podla typu paliv, ako sa rozne vykony roznych elektrarni menili posledne roky,
+skumat ci nejake elektrarne prudko znizili vyrobu elektriny alebo naopak zacali vyrabat vo velkom.
+Ako sa vo vseobecnosti meni vyroba elektrickej energie? Zrejme dost narasta, ale napr. v ktorych statoch najviac, 
+ktore zdroje sa pouzivaju na vyrobu viac, ktore su ako velmi uzitocne, ktore sa az tak neoplati pouzivat.
+Pokusim sa zistit, nakolko sa prestavaju pouzivat fosilne paliva na vyrobu elektriny, ktore z obnovitelnych zdrojov sa vyuzivaju najviac.
+Tiez budem skumat, ktore krajiny sa zameriavaju na rozlicne typy paliv, ci prudko menili v poslednych rokoch sposoby vyroby elektriny.
+Chcem aj vytvorit nejake mapy s roznymi typmi elektrarni - skusit odvodit, ake su vyhodne polohy pre elektrarne vseobecne, 
+pripadne pre niektore rozne typy (vodne budu asi v blizkosti nejakych vacsich vodnych ploch, veterne mozno na rozsiahlejsich planinach,
+v horach asi velmi elektrarne nebudu). Su solarne elektrarne vykonnejsie v rovnikovych oblastiach ako niekde na severe Europy, Kanady?
+Pripadne sa pokusim pre vsetky typy elektrarni vytvorit jednu interaktivnu mapu, kde by sa dali porovnavat ich umiestnenia a pocty.
+
+Data nataham do databazy (sqlite3), na ich spracovanie a vizualizaciu pouzijem hlavne python (mozno aj R).
+Chcem aj vytvorit webstranku, kde by boli nejake interaktivne vizualizacie.
+
+
+
