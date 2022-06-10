@@ -9,14 +9,24 @@ if __name__ == "__main__":
     db = connect_db()
     cursor = db.cursor()
 
-    # cursor.execute("""SELECT country, COUNT() FROM powerplants GROUP BY country""")
-    cursor.execute("""SELECT name, primary_fuel FROM powerplants WHERE country='SVK'""")
-    cursor.execute("""SELECT primary_fuel, SUM(generation_gwh_2013), SUM(generation_gwh_2019) 
-                        FROM powerplants GROUP BY primary_fuel""")
-    cursor.execute("""SELECT other_fuel1, SUM(generation_gwh_2013), SUM(generation_gwh_2019) 
-                        FROM powerplants GROUP BY other_fuel1""")
-
+    cursor.execute("""SELECT country, COUNT() as pocet FROM powerplants GROUP BY country LIMIT 10""")
+    print("Number of powerplants of first 10 countries sorted alphabetically")
     for row in cursor:
-        print(row)
+        print(f"{row[0]:5} {row[1]:>5}")
+
+    print(end="\n\n")
+
+    cursor.execute("""SELECT name, primary_fuel, capacity_mw FROM powerplants WHERE country='SVK'""")
+    print(f"{'Name of powerplant':65} {'Primary fuel':15} Capacity in megawatts".upper())
+    for row in cursor:
+        print(f"{row[0]:70} {row[1]:<10} {float(row[2]):10.2f}")
+
+    print(end="\n\n")
+
+    cursor.execute("""SELECT primary_fuel, SUM(capacity_mw) as capacity_sum, COUNT(), AVG(capacity_mw)
+                        FROM powerplants GROUP BY primary_fuel ORDER BY capacity_sum DESC""")
+    print(f"Primary fuel\tTotal capacity in megawatts\tNumber of powerplants\tAverage capacity".upper())
+    for row in cursor:
+        print(f"{row[0]:15} {round(row[1]):>20} {round(row[2]):>20} {round(row[3]):>20}")
 
     db.close()
