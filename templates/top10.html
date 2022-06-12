@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Homepage</title>
+</head>
+<body>
+  <h1>Top 10 countries</h1>
+    <div><a href="/">{{ "Home" }}</a></div><br>
+
+  <h2>Total capacity in megawatts</h2>
+    <div id="plotly1"></div>
+  <h2>Number of power plants</h2>
+    <div id="plotly2"></div>
+  <h2>Average capacity of power plants in megawatts</h2>
+    <div id="plotly3"></div>
+    <script>
+        var graph1 = {{ fig1 | safe }};
+        Plotly.plot('plotly1', graph1, {});
+        var graph2 = {{ fig2 | safe }};
+        Plotly.plot('plotly2', graph2, {});
+        var graph3 = {{ fig3 | safe }};
+        Plotly.plot('plotly3', graph3, {});
+
+    </script>
+
+{#  <h2>Total capacity in megawatts</h2>#}
+{#  {% for country, data in c1 %}#}
+{#    <p>{{ country }} {{ data }}</p>#}
+{#  {% endfor %}#}
+{##}
+{#  <h2>Number of power plants</h2>#}
+{#  {% for country, data in c2 %}#}
+{#    <p>{{ country }} {{ data }}</p>#}
+{#  {% endfor %}#}
+{##}
+{#  <h2>Average capacity of power plants in megawatts</h2>#}
+{#  {% for country, data in c3 %}#}
+{#    <p>{{ country }} {{ data }}</p>#}
+{#  {% endfor %}#}
+
+</body>
+</html>

@@ -1,0 +1,33 @@
+Protokol z projektu
+
+
+Odovzdane subory:
+-----------------
+
+
+
+Spustene prikazy:
+-----------------
+
+# Preprocess data
+python3 preprocess.py
+
+# Create database
+sqlite3 powerplants.sqlite3 < create_db.sql
+
+# First analysis
+python3 analysis.py
+
+# Launch web app
+export FLASK_APP=main.py
+export FLASK_ENV=development
+flask run --port=5225
+
+
+
+
+Pouzite zdroje:
+---------------
+Stranky predmetu a odkazy na nich
+Dokumentacie prislusnych programovacich jazykov (python, javascript)
+Kusy kodu zo StackOverflow, odkazy su priamo pri danom kode (asi na 2 - 3 miestach)

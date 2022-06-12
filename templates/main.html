@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Homepage</title>
+</head>
+<body>
+  <h1>Power plants all over the World</h1>
+    <div><a href="{{ url_for("wat2") }}">{{ "TOP 10" }}</a></div><br>
+  {% for country in countries %}
+    <a href="{{ url_for("wat", country=country+'1') }}">{{ country }}</a>&emsp;
+  {% endfor %}
+
+    <div id="plotly"></div>
+    <div id="plotly2"></div>
+    <div id="plotly3"></div>
+
+    <script>
+    var graph = {{ graph1 | safe }};
+    Plotly.plot('plotly', graph, {});
+    </script>
+    <script>
+    var graph = {{ graph2 | safe }};
+    Plotly.plot('plotly2', graph, {});
+    </script>
+    <script>
+    var graph = {{ graph3 | safe }};
+    Plotly.plot('plotly3', graph, {});
+    </script>
+
+</body>
+</html>

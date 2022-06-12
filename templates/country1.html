@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>{{ country }}</title>
+</head>
+<body>
+    <h1>{{ country }}</h1>
+    <div><a href="/">{{ "Home" }}</a></div><br>
+    <p>Number of all power plants: {{ pocet }}</p>
+    <p>Number of shown power plants (max. 100): {{ pocet2 }}</p>
+    <p>The power plant with maximum capacity in megawatts: {{ maxim }}</p>
+
+    <a href="{{ url_for("wat", country=country) }}">{{ 'Change map' }}</a>
+    <div id="plotly"></div>
+    <script>
+    var graph = {{ graph | safe }};
+    Plotly.plot('plotly', graph, {});
+    </script>
+
+{#    {% for id in ids %}#}
+{#        <a href="{{ url_for("wat", country=id) }}">{{ id }}</a>&emsp;#}
+{#    {% endfor %}#}
+{#    <div id="chart_div" style="width: 900px; height: 500px;"></div>#}
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!doctype html>
+<html>
+<head>
+    <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
+{#    https://stackoverflow.com/questions/38212575/markers-wont-appear-on-geochart-but-the-map-displays-just-fine/38273383#38273383#}
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2WAoVYQ5AxOcXh9MKEAcqMhTs_UUMSa0&callback=initMap"></script>
+    <script type='text/javascript'>
+
+     google.charts.load('current', {
+       'packages': ['map'],
+       // Note: Because markers require geocoding, you'll need a mapsApiKey.
+       // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+         // and also https://developers.google.com/maps/documentation/javascript/get-api-key
+       {#'mapsApiKey': 'AIzaSyB2WAoVYQ5AxOcXh9MKEAcqMhTs_UUMSa0'#}
+     });
+     google.charts.setOnLoadCallback(drawMarkersMap);
+
+      function drawMarkersMap() {
+      var data = google.visualization.arrayToDataTable([
+          ['Latitude', 'Longitude', 'Primary_fuel', 'Markers'],
+          {% for lat, lon, fuel, cap in map_data %}
+            [ {{ lat }}, {{ lon }}, '{{ fuel }}\nCapacity in mw: {{ cap }}', '{{ fuel }}'],
+          {% endfor %}
+      ]);
+
+      var url_off = 'https://icons.iconarchive.com/icons/icons8/ios7/32/';
+      var url_on = 'https://icons.iconarchive.com/icons/icons8/windows-8/32/';
+
+      var options = {
+          enableScrollWheel: true,
+        showTooltip: true,
+        showInfoWindow: true,
+        useMapTypeControl: true,
+          mapType: 'terrain',
+
+          icons: {
+          Hydro: {
+            normal:   'https://icons.iconarchive.com/icons/iconsmind/outline/32/Rain-Drop-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/paomedia/small-n-flat/32/drop-icon.png'
+          },
+          Coal: {
+            normal:   'https://icons.iconarchive.com/icons/chrisl21/minecraft/32/Coal-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/chrisl21/minecraft/32/Coal-icon.png'
+          },
+          Gas: {
+            normal:   url_off + 'Industry-Gas-Industry-icon.png',
+            selected: url_on + 'Industry-Gas-Industry-icon.png'
+          },
+          Nuclear: {
+            normal:   url_off + 'Industry-Nuclear-Power-Plant-icon.png',
+            selected: url_on + 'Industry-Nuclear-Power-Plant-icon.png'
+          },
+          Wind: {
+            normal:   url_off + 'Industry-Wind-Turbine-icon.png',
+            selected: url_on + 'Industry-Wind-Turbine-icon.png'
+          },
+          Oil: {
+            normal:   url_off + 'Industry-Oil-Industry-icon.png',
+            selected: url_on + 'Industry-Oil-Industry-icon.png'
+          },
+          Solar: {
+            normal:   url_off + 'Industry-Solar-Panel-icon.png',
+            selected: url_on + 'Industry-Solar-Panel-icon.png'
+          },
+          Biomass: {
+            normal:   url_off + 'Industry-Biomass-icon.png',
+            selected: url_on + 'Industry-Biomass-icon.png'
+          },
+          Waste: {
+            normal:   url_off + 'Household-Waste-icon.png',
+            selected: url_on + 'Household-Waste-icon.png'
+          },
+          Geothermal: {
+            normal:   url_off + 'Industry-Geothermal-icon.png',
+            selected: url_on + 'Industry-Geothermal-icon.png'
+          },
+          Cogeneration: {
+            normal:   'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png'
+          },
+          'Wave and Tidal': {
+            normal:   'https://icons.iconarchive.com/icons/icons8/ios7/32/Travel-Sea-Waves-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/fasticon/beach/32/wave-icon.png'
+          },
+          Petcoke: {
+            normal:   'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png'
+          },
+          Storage: {
+            normal:   'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png'
+          },
+          Other: {
+            normal:   'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png',
+            selected: 'https://icons.iconarchive.com/icons/thesquid.ink/free-flat-sample/32/power-plant-icon.png'
+          },
+        }
+      };
+
+//      var options = {
+  //      region: '{{iso}}',
+//        dataMode: 'markers',
+//        colorAxis: {colors: ['green', 'blue']},
+//        enableRegionInteractivity: 1
+//      };
+
+      var chart = new google.visualization.Map(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    };
+    </script>
+    <title>{{ country }}</title>
+</head>
+<body>
+    <h1>{{ country }}</h1>
+    <div><a href="/">{{ "Home" }}</a></div><br>
+
+    <p>Number of all power plants: {{ pocet }}</p>
+    <p>Number of shown power plants (max. 100): {{ pocet2 }}</p>
+    <p>The power plant with maximum capacity in megawatts: {{ maxim }}</p>
+
+{#    {% for id in ids %}#}
+{#        <a href="{{ url_for("wat", country=id) }}">{{ id }}</a>&emsp;#}
+{#    {% endfor %}#}
+    <a href="{{ url_for("wat", country=country+'1') }}">{{ 'Change map' }}</a>
+    <div id="chart_div" style="width: 900px; height: 500px;"></div>
+
+</body>
+</html>
