@@ -29,4 +29,6 @@ if __name__ == "__main__":
     for row in cursor:
         print(f"{row[0]:15} {round(row[1]):>20} {round(row[2]):>20} {round(row[3]):>20}")
 
+
+
     db.close()
