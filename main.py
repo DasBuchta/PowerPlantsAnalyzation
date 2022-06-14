@@ -58,7 +58,7 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
 
 
 def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', label_c=None, log_x=False, log_y=False,
-                 hidelegend=False):
+                 hidelegend=False, hovermode=None):
     """Returns plotly.express graph in json format
     type: bar, line or scatter"""
 
@@ -78,6 +78,8 @@ def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', lab
     fig.update_xaxes(type='category')
     if hidelegend:
         fig.update_layout(showlegend=False)
+    if hovermode is not None:
+        fig.update_layout(hovermode=hovermode)
 
     return px_to_json(fig)
 
@@ -230,11 +232,11 @@ def home():
 
         fig_rep = plotly_graph('line', x=years_rep, y=caps_rep, color=category * 7, log_y=log_y1,
                             title='Change of generated energy over years (reported)', label_x='Year',
-                            label_y=label_y, label_c=label_c)
+                            label_y=label_y, label_c=label_c, hovermode="x")
 
         fig_est = plotly_graph('line', x=years_est, y=caps_est, color=category * 5, log_y=log_y2,
                             title='Change of generated energy over years (estimated)', label_x='Year',
-                            label_y=label_y, label_c=label_c)
+                            label_y=label_y, label_c=label_c, hovermode="x")
 
         return fig_rep, fig_est
 
