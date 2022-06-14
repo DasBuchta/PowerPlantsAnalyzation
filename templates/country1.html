@@ -6,11 +6,31 @@
 </head>
 <body>
     <h1>{{ country }}</h1>
-    <div><a href="/">{{ "Home" }}</a></div><br>
-    <p>Number of all power plants: {{ pocet }}</p>
-    <p>Number of shown power plants (max. 100): {{ pocet2 }}</p>
-    <p>The power plant with maximum capacity in megawatts: {{ maxim }}</p>
+    <div><a href="/">{{ "<=" }}</a></div><br>
 
+    <p>Number of all power plants: {{ pocet }}</p>
+    <p>Total capacity of power plants (MW): {{ max_cap }}</p>
+    <p>Maximum capacity of power plant (MW): {{ maxim }}</p>
+    <table>
+    <thead>
+        <tr>
+            <th>Primary fuel</th>
+            <th>Number of power plants</th>
+            <th>Percentage of total capacity</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for poc, fue, kap in fuels_data %}
+            <tr>
+                <td>{{ fue }}</td>
+                <td>{{ poc }}</td>
+                <td>{{ kap }}%</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+    <br>
+    <p>Number of shown power plants (max. 100): {{ pocet2 }}</p>
     <a href="{{ url_for("wat", country=country) }}">{{ 'Change map' }}</a>
     <div id="plotly"></div>
     <script>

@@ -14,33 +14,21 @@ def px_to_json(fig):
     return plot_json
 
 
-def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, country=None):
+def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, country=None, caps_per=None):
+    print(caps_per)
     fig = px.scatter_geo(lat=lats,
                          lon=lons,
                          color=fuels,
                          hover_name=names,
+                         hover_data=[caps_per],
                          size=caps,
                          labels={'lat': 'Latitude',
                                  'lon': 'Longitude',
                                  'color': 'Primary fuel',
-                                 'size': 'Capacity (MW)', }
+                                 'size': 'Capacity (MW)',
+                                 'hover_data_0': 'Percentage of total capacity'}
                          )
-    # plotting_data = {fuel: np.array([np.array((lats[i], lons[i]), dtype='float64') for i
-    #                                  in range(len(lats)) if fuels[i] == fuel]) for fuel in fuels}
-    # cols = sns.color_palette('muted', len(fuels))
-    # colors = {fuels[i]: f"hsl{cols[i]}" for i in range(len(fuels))}
-    # fig = go.Figure()
-    # for f in plotting_data:
-    #     fig.add_trace(go.Scattergeo(
-    #         lat=plotting_data[f][:, 0],
-    #         lon=plotting_data[f][:, 1],
-    #         text=f,
-    #         mode='markers',
-    #         name=f,
-    #
-    #     )
-    #     )
-    #
+
     fig.update_geos(
         showcoastlines=True, coastlinecolor="RebeccaPurple",
         showland=True, landcolor="LightGrey",
@@ -49,7 +37,7 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
         showrivers=True, rivercolor="LightBlue",
         showcountries=True
     )
-    if country == 'United States of America':
+    if country == 'United States':
         geoscope = 'usa'
     elif country == 'Russia' or country == 'Antarctica':
         geoscope = 'world'
@@ -69,7 +57,8 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
     return px_to_json(fig)
 
 
-def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', label_c=None, log_x=False, log_y=False):
+def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', label_c=None, log_x=False, log_y=False,
+                 hidelegend=False):
     """Returns plotly.express graph in json format
     type: bar, line or scatter"""
 
@@ -85,6 +74,10 @@ def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', lab
         fig = px.scatter(x=x, y=y, color=color, title=title, labels=labels, log_x=log_x, log_y=log_y)
     else:
         raise TypeError(f"{type.capitalize()} graph is not implemented")
+
+    fig.update_xaxes(type='category')
+    if hidelegend:
+        fig.update_layout(showlegend=False)
 
     return px_to_json(fig)
 
@@ -112,8 +105,19 @@ def wat(country):
         country = country[:-1]
 
     cur = g.db.cursor()
-    cur.execute(f"""SELECT count() FROM powerplants WHERE country_long=?""", (country,))
-    pocet = [row[0] for row in cur][0]
+    cur.execute(f"""SELECT count(), primary_fuel, SUM(capacity_mw) FROM powerplants
+                    WHERE country_long=? GROUP BY primary_fuel""", (country,))
+    pocty = []
+    fuely = []
+    kapacity = []
+    for row in cur:
+        pocty.append(row[0])
+        fuely.append(row[1])
+        kapacity.append(row[2])
+    pocet = sum(pocty)
+    kapacitA = sum(kapacity)
+    kapacity = [round(kap/kapacitA*100, 2) for kap in kapacity]
+
     cur.execute(f"""SELECT id, country, latitude, longitude, primary_fuel, capacity_mw, name 
     FROM powerplants WHERE country_long=? ORDER BY capacity_mw DESC LIMIT 100""", (country,))
     data = [row for row in cur]
@@ -129,85 +133,150 @@ def wat(country):
     fuels = [row[4] for row in data]
     caps = [round(row[5], 2) for row in data]
     names = [row[6] for row in data]
+    caps_per = [round(cap/kapacitA*100, 2) for cap in caps]
 
     return render_template(idc+'.html', country=country, pocet=pocet, pocet2=pocet2, ids=ids, iso=iso_alpha_2,
-                           map_data=zip(lats, lons, fuels, caps), maxim=max(caps),
-                           graph=geo_plotly_graph(lats, lons, fuels, names, caps, country_updated))
+                           map_data=zip(lats, lons, fuels, caps), maxim=round(max(caps), 2),
+                           graph=geo_plotly_graph(lats, lons, fuels, names, caps, country_updated, caps_per),
+                           fuels_data=zip(pocty, fuely, kapacity), max_cap=round(kapacitA, 2))
 
 
 @app.route('/top10/')
 def wat2():
     cur = g.db.cursor()
 
-    cur.execute("""SELECT country_long, SUM(capacity_mw) as capacity_sum
-                        FROM powerplants GROUP BY country_long ORDER BY capacity_sum DESC LIMIT 10""")
-    countries1 = []
-    data1 = []
-    for row in cur:
-        countries1.append(row[0])
-        data1.append(row[1])
-    fig1 = plotly_graph('bar', x=countries1, y=data1, label_x='Country', label_y='Total capacity (MW)')
+    cur.execute("""SELECT country_long, SUM(capacity_mw), COUNT(), AVG(capacity_mw), count(distinct primary_fuel)
+                            FROM powerplants WHERE country_long='Slovakia' GROUP BY country_long""")
+    svk = [row for row in cur][0]
 
-    cur.execute("""SELECT country_long, count() as pocet
-                        FROM powerplants GROUP BY country_long ORDER BY pocet DESC LIMIT 10""")
-    countries2 = []
-    data2 = []
-    for row in cur:
-        countries2.append(row[0])
-        data2.append(row[1])
-    fig2 = plotly_graph('bar', x=countries2, y=data2, label_x='Country', label_y='Number of power plants')
+    def make_fig(query, svk123=1, label_y=''):
+        cur.execute(query)
+        countries = []
+        data = []
+        for row in cur:
+            countries.append(row[0])
+            data.append(row[1])
+        countries.append(svk[0])
+        data.append(svk[svk123])
+        fig = plotly_graph('bar', x=countries, y=data, label_x='Country', label_y=label_y,
+                           color=['#636EFA']*10+['#EF553B'], hidelegend=True)
+        return fig
 
-    cur.execute("""SELECT country_long, AVG(capacity_mw) as average
-                        FROM powerplants GROUP BY country_long ORDER BY average DESC LIMIT 10""")
-    countries3 = []
-    data3 = []
-    for row in cur:
-        countries3.append(row[0])
-        data3.append(row[1])
-    fig3 = plotly_graph('bar', x=countries3, y=data3, label_x='Country', label_y='Average capacity (MW)')
+    fig1 = make_fig("""SELECT country_long, SUM(capacity_mw) as capacity_sum
+                        FROM powerplants GROUP BY country_long ORDER BY capacity_sum DESC LIMIT 10""",
+                    svk123=1, label_y='Total capacity (MW)')
 
-    return render_template('top10.html', fig1=fig1, fig2=fig2, fig3=fig3)
+    fig2 = make_fig("""SELECT country_long, count() as pocet
+                        FROM powerplants GROUP BY country_long ORDER BY pocet DESC LIMIT 10""",
+                    svk123=2, label_y='Number of power plants')
+
+    fig3 = make_fig("""SELECT country_long, AVG(capacity_mw) as average
+                        FROM powerplants GROUP BY country_long ORDER BY average DESC LIMIT 10""",
+                    svk123=3, label_y='Average capacity (MW)')
+
+    fig4 = make_fig("""SELECT country_long, count(distinct primary_fuel) as unique_ones
+                    FROM powerplants GROUP BY country_long ORDER BY unique_ones DESC LIMIT 10""",
+                    svk123=4, label_y='Number of different kinds')
+
+    return render_template('top10.html', fig1=fig1, fig2=fig2, fig3=fig3, fig4=fig4)
 
 
 @app.route('/')
 def home():
     cur = g.db.cursor()
     cur.execute(f"SELECT country_long FROM powerplants GROUP BY country_long")
-    # countries = [row[0] for row in cur]
     names = [row[0] for row in cur]
     # print(names)
 
-    cur.execute("""SELECT AVG(capacity_mw) as average, primary_fuel, sum(generation_gwh_2013), sum(generation_gwh_2014),
+    cur.execute(f"""SELECT id, country_long, name, capacity_mw, primary_fuel 
+                    FROM powerplants ORDER BY capacity_mw DESC LIMIT 1""")
+    max_cap = [row for row in cur][0]
+    max_cap = f"{max_cap[2]} in {max_cap[1]} - {max_cap[4]} power plant, capacity (MW): {max_cap[3]}"
+
+    def bar_plot(query, title='', label_x='', label_y=''):
+        cur.execute(query)
+
+        data = [row for row in cur]  # load output from query to list
+        x_data = [row[0] for row in data]
+        y_data = [row[1] for row in data]
+
+        fig = plotly_graph('bar', x=x_data, y=y_data, title=title, label_x=label_x, label_y=label_y, log_y=True)
+        return fig
+
+    fig1 = bar_plot("""SELECT primary_fuel, SUM(capacity_mw) as capacity_sum
+                        FROM powerplants GROUP BY primary_fuel ORDER BY capacity_sum DESC""",
+                    title='Total capacity of different kinds of power plants',
+                    label_x='Type of power plant', label_y='Total capacity (MW)')
+    fig2 = bar_plot("""SELECT primary_fuel, COUNT() as pocet
+                        FROM powerplants GROUP BY primary_fuel ORDER BY pocet DESC""",
+                    title='Number of different kinds of power plants',
+                    label_x='Type of power plant', label_y='Number of power plants')
+    fig3 = bar_plot("""SELECT primary_fuel, AVG(capacity_mw) as capacity_avg
+                        FROM powerplants GROUP BY primary_fuel ORDER BY capacity_avg DESC""",
+                    title='Performance of different kinds of power plants',
+                    label_x='Type of power plant', label_y='Average capacity (MW)')
+
+    def year_plot(data, category, log_y1=False, log_y2=False, label_y='', label_c=''):
+        caps_rep = []
+        for i in range(0, 7):
+            caps_rep.extend([row[i] for row in data])
+        caps_est = []
+        for i in range(7, 12):
+            caps_est.extend([row[i] for row in data])
+
+        # print(caps_rep)
+        years_rep = sorted([2013, 2014, 2015, 2016, 2017, 2018, 2019] * len(category))
+        years_est = sorted([2013, 2014, 2015, 2016, 2017] * len(category))
+
+        fig_rep = plotly_graph('line', x=years_rep, y=caps_rep, color=category * 7, log_y=log_y1,
+                            title='Change of generated energy over years (reported)', label_x='Year',
+                            label_y=label_y, label_c=label_c)
+
+        fig_est = plotly_graph('line', x=years_est, y=caps_est, color=category * 5, log_y=log_y2,
+                            title='Change of generated energy over years (estimated)', label_x='Year',
+                            label_y=label_y, label_c=label_c)
+
+        return fig_rep, fig_est
+
+    cur.execute("""SELECT primary_fuel, sum(generation_gwh_2013), sum(generation_gwh_2014),
+                    sum(generation_gwh_2015), sum(generation_gwh_2016), sum(generation_gwh_2017), 
+                    sum(generation_gwh_2018), sum(generation_gwh_2019), sum(estimated_generation_gwh_2013), 
+                    sum(estimated_generation_gwh_2014), sum(estimated_generation_gwh_2015), 
+                    sum(estimated_generation_gwh_2016), sum(estimated_generation_gwh_2017),
+                    avg(generation_gwh_2013), avg(generation_gwh_2014),
+                    avg(generation_gwh_2015), avg(generation_gwh_2016), avg(generation_gwh_2017), 
+                    avg(generation_gwh_2018), avg(generation_gwh_2019), avg(estimated_generation_gwh_2013), 
+                    avg(estimated_generation_gwh_2014), avg(estimated_generation_gwh_2015), 
+                    avg(estimated_generation_gwh_2016), avg(estimated_generation_gwh_2017), sum(capacity_mw)
+                    FROM powerplants GROUP BY primary_fuel""")
+
+    data2 = [row for row in cur]  # load output from query to list
+    total = sum(row[-1] for row in data2)  # total capacity
+    fuels = [row[0] for row in data2]
+
+    fig4, fig5 = year_plot([row[1:13] for row in data2], fuels, label_y='Generated energy (MWh)',
+                           label_c='Type of power plant')
+
+    fig6, fig7 = year_plot([row[13:25] for row in data2], fuels, label_y='Average generated energy (MWh)',
+                           label_c='Type of power plant')
+
+
+    cur.execute("""SELECT country_long, sum(generation_gwh_2013), sum(generation_gwh_2014),
                     sum(generation_gwh_2015), sum(generation_gwh_2016), sum(generation_gwh_2017), 
                     sum(generation_gwh_2018), sum(generation_gwh_2019), sum(estimated_generation_gwh_2013), 
                     sum(estimated_generation_gwh_2014), sum(estimated_generation_gwh_2015), 
                     sum(estimated_generation_gwh_2016), sum(estimated_generation_gwh_2017)
-                    FROM powerplants GROUP BY primary_fuel ORDER BY average DESC""")
+                    FROM powerplants GROUP BY country_long""")
 
-    data = [row for row in cur]
-    vykon = [row[0] for row in data]
-    fuels = [row[1] for row in data]
+    data3 = [row for row in cur]  # load output from query to list
+    countries = [row[0] for row in data3]
 
-    fig1 = plotly_graph('bar', x=fuels, y=vykon, title='Performance of different kinds of power plants',
-                        label_x='Type of power plant', label_y='Average capacity (MW)')
+    fig8, fig9 = year_plot([row[1:13] for row in data3], countries, label_y='Generated energy (MWh)',
+                           label_c='Country')
 
-    caps_rep = []
-    for i in range(2, 9):
-        caps_rep.extend([row[i] for row in data])
-    caps_est = []
-    for i in range(9, 14):
-        caps_est.extend([row[i] for row in data])
 
-    # print(caps_rep)
-    years_rep = sorted([2013, 2014, 2015, 2016, 2017, 2018, 2019]*len(fuels))
-    years_est = sorted([2013, 2014, 2015, 2016, 2017]*len(fuels))
 
-    fig2 = plotly_graph('line', x=years_rep, y=caps_rep, color=fuels*7, log_y=True,
-                        title='Change of generated energy over years (reported)', label_x='Year',
-                        label_y='Generated energy (MWh)', label_c='Type of power plant')
 
-    fig3 = plotly_graph('line', x=years_est, y=caps_est, color=fuels*5, log_y=True,
-                        title='Change of generated energy over years (estimated)', label_x='Year',
-                        label_y='Generated energy (MWh)', label_c='Type of power plant')
-
-    return render_template('main.html', countries=names, graph1=fig1, graph2=fig2, graph3=fig3)
+    return render_template('main.html', countries=names, graph1=fig1, graph2=fig2, graph3=fig3, total=round(total),
+                           graph4=fig4, graph5=fig5, graph6=fig6, graph7=fig7, graph8=fig8, graph9=fig9,
+                           plotlies=[f'plotly{i}' for i in range(1, 10)], max_cap=max_cap)

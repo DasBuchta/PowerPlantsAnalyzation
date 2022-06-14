@@ -2,30 +2,34 @@
 <html>
 <head>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <title>Homepage</title>
+    <title>Power plants - Homepage</title>
 </head>
 <body>
   <h1>Power plants all over the World</h1>
-    <div><a href="{{ url_for("wat2") }}">{{ "TOP 10" }}</a></div><br>
+    <div><a href="{{ url_for("wat2") }}">{{ "TOP 10 countries" }}</a></div><br>
+  <p>Total capacity of all power plants (MW): {{ total }}</p>
+  <p>The mightiest power plant: {{ max_cap }}</p>
+
+
   {% for country in countries %}
     <a href="{{ url_for("wat", country=country+'1') }}">{{ country }}</a>&emsp;
   {% endfor %}
 
-    <div id="plotly"></div>
-    <div id="plotly2"></div>
-    <div id="plotly3"></div>
+  <h3 style="color: red">Bar graphs use logarithmic scale on this page.</h3>
+  {% for plot in plotlies %}
+    <div id="{{ plot }}"></div>
+  {% endfor %}
 
     <script>
-    var graph = {{ graph1 | safe }};
-    Plotly.plot('plotly', graph, {});
-    </script>
-    <script>
-    var graph = {{ graph2 | safe }};
-    Plotly.plot('plotly2', graph, {});
-    </script>
-    <script>
-    var graph = {{ graph3 | safe }};
-    Plotly.plot('plotly3', graph, {});
+    Plotly.plot('plotly1', {{ graph1 | safe }}, {});
+    Plotly.plot('plotly2', {{ graph2 | safe }}, {});
+    Plotly.plot('plotly3', {{ graph3 | safe }}, {});
+    Plotly.plot('plotly4', {{ graph4 | safe }}, {});
+    Plotly.plot('plotly5', {{ graph5 | safe }}, {});
+    Plotly.plot('plotly6', {{ graph6 | safe }}, {});
+    Plotly.plot('plotly7', {{ graph7 | safe }}, {});
+    Plotly.plot('plotly8', {{ graph8 | safe }}, {});
+    Plotly.plot('plotly9', {{ graph9 | safe }}, {});
     </script>
 
 </body>
