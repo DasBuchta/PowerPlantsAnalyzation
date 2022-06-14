@@ -31,3 +31,6 @@ Pouzite zdroje:
 Stranky predmetu a odkazy na nich
 Dokumentacie prislusnych programovacich jazykov (python, javascript)
 Kusy kodu zo StackOverflow, odkazy su priamo pri danom kode (asi na 2 - 3 miestach)
+plotly + flask: https://python.plainenglish.io/create-a-simple-covid-19-dashboard-with-flask-plotly-altair-chart-js-and-adminlte-a92ef86a3ca8
+data - elektrarne: https://datasets.wri.org/dataset/globalpowerplantdatabase (Global Power Plant Database v1.3.0)
+data - emisie: http://meicmodel.org/?page_id=91&lang=en
