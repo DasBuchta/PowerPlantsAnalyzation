@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
 {#    https://stackoverflow.com/questions/38212575/markers-wont-appear-on-geochart-but-the-map-displays-just-fine/38273383#38273383#}
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB2WAoVYQ5AxOcXh9MKEAcqMhTs_UUMSa0&callback=initMap"></script>
@@ -117,24 +118,27 @@
     <p>Number of all power plants: {{ pocet }}</p>
     <p>Total capacity of power plants (MW): {{ max_cap }}</p>
     <p>Maximum capacity of power plant (MW): {{ maxim }}</p>
-    <table>
-    <thead>
-        <tr>
-            <th>Primary fuel</th>
-            <th>Number of power plants</th>
-            <th>Percentage of total capacity</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for poc, fue, kap in fuels_data %}
-            <tr>
-                <td>{{ fue }}</td>
-                <td>{{ poc }}</td>
-                <td>{{ kap }}%</td>
-            </tr>
-        {% endfor %}
-    </tbody>
-    </table>
+
+    <div id="fuels" style="width: 600px; height: 350px;"></div>
+    <script>Plotly.plot('fuels', {{ fuels_data | safe }}, {});</script>
+{#    <table>#}
+{#    <thead>#}
+{#        <tr>#}
+{#            <th>Primary fuel</th>#}
+{#            <th>Number of power plants</th>#}
+{#            <th>Percentage of total capacity</th>#}
+{#        </tr>#}
+{#    </thead>#}
+{#    <tbody>#}
+{#        {% for poc, fue, kap in fuels_data %}#}
+{#            <tr>#}
+{#                <td>{{ fue }}</td>#}
+{#                <td>{{ poc }}</td>#}
+{#                <td>{{ kap }}%</td>#}
+{#            </tr>#}
+{#        {% endfor %}#}
+{#    </tbody>#}
+{#    </table>#}
     <br>
     <p>Number of shown power plants (max. 100): {{ pocet2 }}</p>
     <a href="{{ url_for("wat", country=country+'1') }}">{{ 'Change map' }}</a>

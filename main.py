@@ -80,6 +80,7 @@ def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', lab
         fig.update_layout(showlegend=False)
     if hovermode is not None:
         fig.update_layout(hovermode=hovermode)
+        # fig.update_traces(hovertemplate=None)
 
     return px_to_json(fig)
 
@@ -137,10 +138,20 @@ def wat(country):
     names = [row[6] for row in data]
     caps_per = [round(cap/kapacitA*100, 2) for cap in caps]
 
+    fig_tab = go.Figure(data=[go.Table(header=dict(values=['Primary fuel', 'Number of power plants',
+                                                           'Percentage of total capacity'],
+                                                   line_color='lightslategray',
+                                                   fill_color='lightskyblue'),
+                                       cells=dict(values=[fuely, pocty, kapacity],
+                                                  line_color='lightgrey',
+                                                  fill_color='lightcyan'))
+                              ])
+    # fig_tab.update_layout(width=500, height=400)
+
     return render_template(idc+'.html', country=country, pocet=pocet, pocet2=pocet2, ids=ids, iso=iso_alpha_2,
                            map_data=zip(lats, lons, fuels, caps), maxim=round(max(caps), 2),
                            graph=geo_plotly_graph(lats, lons, fuels, names, caps, country_updated, caps_per),
-                           fuels_data=zip(pocty, fuely, kapacity), max_cap=round(kapacitA, 2))
+                           fuels_data=px_to_json(fig_tab), max_cap=round(kapacitA, 2))
 
 
 @app.route('/top10/')
@@ -256,10 +267,10 @@ def home():
     total = sum(row[-1] for row in data2)  # total capacity
     fuels = [row[0] for row in data2]
 
-    fig4, fig5 = year_plot([row[1:13] for row in data2], fuels, label_y='Generated energy (MWh)',
+    fig4, fig5 = year_plot([row[1:13] for row in data2], fuels, label_y='Generated energy (GWh)',
                            label_c='Type of power plant')
 
-    fig6, fig7 = year_plot([row[13:25] for row in data2], fuels, label_y='Average generated energy (MWh)',
+    fig6, fig7 = year_plot([row[13:25] for row in data2], fuels, label_y='Average generated energy (GWh)',
                            label_c='Type of power plant')
 
 
@@ -273,7 +284,7 @@ def home():
     data3 = [row for row in cur]  # load output from query to list
     countries = [row[0] for row in data3]
 
-    fig8, fig9 = year_plot([row[1:13] for row in data3], countries, label_y='Generated energy (MWh)',
+    fig8, fig9 = year_plot([row[1:13] for row in data3], countries, label_y='Generated energy (GWh)',
                            label_c='Country')
 
 
