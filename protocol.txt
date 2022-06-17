@@ -43,4 +43,7 @@ https://slovnik.juls.savba.sk/
 https://en.wikipedia.org/wiki/Three_Gorges_Dam
 https://en.wikipedia.org/wiki/Gansu_Wind_Farm
 https://en.wikipedia.org/wiki/Rance_Tidal_Power_Station
-
+https://www.worldometers.info/gas/saudi-arabia-natural-gas/#gas-reserves
+https://www.worldometers.info/oil/saudi-arabia-oil/#oil-reserves
+https://worldsmartcities.org/5-places-running-on-100-renewable-energy/
+https://en.wikipedia.org/wiki/K%C3%A1rahnj%C3%BAkar_Hydropower_Plant
