@@ -3,6 +3,17 @@ Protokol z projektu
 
 Odovzdane subory:
 -----------------
+analysis.py  # nejake jednoduche analyzy na datach
+control.py  # rozne pokusy nacitavania dat - nakoniec nepouzite v projekte
+create_db.sql  # vytvorenie databazy
+global_power_plant_database_adjusted.csv  # predspracovane data
+global_power_plant_database_v_1_3  # povodny priecinok s datami a dokumentaciou k nim
+main.py  # python skript - flask webstranka
+powerplants.sqlite3  # databaza s elektrarnami
+preprocess.py  # python skript na predspracovanie dat
+report.pdf  # report
+templates  # priecinok s podkladmi pre jednotlive webstranky
+
 
 
 
