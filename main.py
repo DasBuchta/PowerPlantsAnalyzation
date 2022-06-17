@@ -5,17 +5,23 @@ import plotly.graph_objects as go
 import plotly.express as px
 import json
 from plotly.utils import PlotlyJSONEncoder
-import seaborn as sns
-import numpy as np
 
 
 def px_to_json(fig):
+    """Change plotly graph to JSON"""
     plot_json = json.dumps(fig, cls=PlotlyJSONEncoder)
     return plot_json
 
 
 def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, country=None, caps_per=None):
-    print(caps_per)
+    """PLotly scatter geo graph
+    lats, lons: lists of latitudes and longitudes of geo data
+    names: name to show
+    caps: some numeric data
+    country: country in which geodata occurs
+    caps_per: additional numeric info (e. g. percentage)"""
+
+    # create plotly graph
     fig = px.scatter_geo(lat=lats,
                          lon=lons,
                          color=fuels,
@@ -29,6 +35,7 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
                                  'hover_data_0': 'Percentage of total capacity'}
                          )
 
+    # some adjustments to look of map
     fig.update_geos(
         showcoastlines=True, coastlinecolor="RebeccaPurple",
         showland=True, landcolor="LightGrey",
@@ -37,6 +44,8 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
         showrivers=True, rivercolor="LightBlue",
         showcountries=True
     )
+
+    # scope to part of world according to country
     if country == 'United States':
         geoscope = 'usa'
     elif country == 'Russia' or country == 'Antarctica':
@@ -48,6 +57,8 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
             pcc.country_alpha2_to_continent_code(pcc.country_name_to_country_alpha2(country))).lower()
     if geoscope == 'oceania':
         geoscope = 'world'
+
+    # update labels
     fig.update_layout(
         title=f'Power plants in {country}',
         geo_scope=geoscope,
@@ -60,12 +71,20 @@ def geo_plotly_graph(lats=None, lons=None, fuels=None, names=None, caps=None, co
 def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', label_c=None, log_x=False, log_y=False,
                  hidelegend=False, hovermode=None):
     """Returns plotly.express graph in json format
-    type: bar, line or scatter"""
+    type: bar, line or scatter
+    x, y: axes
+    color: data to distinguish by color
+    title, label_x, label_y, label_c: title and labels for axes and color legend
+    log_x, log_y: logarithmic scales
+    hidelegend: used only with color data
+    hovermode: adjust hovermode, see: https://plotly.com/python/hover-text-and-formatting/
+    """
 
     labels = {'x': label_x, 'y': label_y}
     if label_c is not None:
         labels['color'] = label_c
 
+    # create graph according to type
     if type == 'bar':
         fig = px.bar(x=x, y=y, color=color, title=title, labels=labels, log_x=log_x, log_y=log_y)
     elif type == 'line':
@@ -75,6 +94,7 @@ def plotly_graph(type, x, y, color=None, title="", label_x='x', label_y='y', lab
     else:
         raise TypeError(f"{type.capitalize()} graph is not implemented")
 
+    # some axes and layout ajustments
     fig.update_xaxes(type='category')
     if hidelegend:
         fig.update_layout(showlegend=False)
@@ -103,10 +123,13 @@ def teardown_request(exception):
 @app.route('/<country>/')
 def wat(country):
     idc = 'country'
+
+    # decide which template to use
     if country[-1] == '1':
         idc += '1'
         country = country[:-1]
 
+    # some basic info about country
     cur = g.db.cursor()
     cur.execute(f"""SELECT count(), primary_fuel, SUM(capacity_mw) FROM powerplants
                     WHERE country_long=? GROUP BY primary_fuel""", (country,))
@@ -121,6 +144,7 @@ def wat(country):
     kapacitA = sum(kapacity)
     kapacity = [round(kap/kapacitA*100, 2) for kap in kapacity]
 
+    # get data to create map
     cur.execute(f"""SELECT id, country, latitude, longitude, primary_fuel, capacity_mw, name 
     FROM powerplants WHERE country_long=? ORDER BY capacity_mw DESC LIMIT 100""", (country,))
     data = [row for row in cur]
@@ -138,6 +162,7 @@ def wat(country):
     names = [row[6] for row in data]
     caps_per = [round(cap/kapacitA*100, 2) for cap in caps]
 
+    # create table with different kinds of fuels used in country
     fig_tab = go.Figure(data=[go.Table(header=dict(values=['Primary fuel', 'Number of power plants',
                                                            'Percentage of total capacity'],
                                                    line_color='lightslategray',
@@ -158,10 +183,12 @@ def wat(country):
 def wat2():
     cur = g.db.cursor()
 
+    # get data for Slovakia to compare with top 10 countries
     cur.execute("""SELECT country_long, SUM(capacity_mw), COUNT(), AVG(capacity_mw), count(distinct primary_fuel)
                             FROM powerplants WHERE country_long='Slovakia' GROUP BY country_long""")
     svk = [row for row in cur][0]
 
+    # function to make bar graph using some info about 10 countries
     def make_fig(query, svk123=1, label_y=''):
         cur.execute(query)
         countries = []
@@ -175,18 +202,22 @@ def wat2():
                            color=['#636EFA']*10+['#EF553B'], hidelegend=True)
         return fig
 
+    # top 10 countries by capacity_mw
     fig1 = make_fig("""SELECT country_long, SUM(capacity_mw) as capacity_sum
                         FROM powerplants GROUP BY country_long ORDER BY capacity_sum DESC LIMIT 10""",
                     svk123=1, label_y='Total capacity (MW)')
 
+    # top 10 countries by number of power plants
     fig2 = make_fig("""SELECT country_long, count() as pocet
                         FROM powerplants GROUP BY country_long ORDER BY pocet DESC LIMIT 10""",
                     svk123=2, label_y='Number of power plants')
 
+    # top 10 countries by average capacity_mw
     fig3 = make_fig("""SELECT country_long, AVG(capacity_mw) as average
                         FROM powerplants GROUP BY country_long ORDER BY average DESC LIMIT 10""",
                     svk123=3, label_y='Average capacity (MW)')
 
+    # top 10 countries by number of different kinds of power plants
     fig4 = make_fig("""SELECT country_long, count(distinct primary_fuel) as unique_ones
                     FROM powerplants GROUP BY country_long ORDER BY unique_ones DESC LIMIT 10""",
                     svk123=4, label_y='Number of different kinds')
@@ -201,11 +232,13 @@ def home():
     names = [row[0] for row in cur]
     # print(names)
 
+    # power plant with maximum capacity_mw
     cur.execute(f"""SELECT id, country_long, name, capacity_mw, primary_fuel 
                     FROM powerplants ORDER BY capacity_mw DESC LIMIT 1""")
     max_cap = [row for row in cur][0]
     max_cap = f"{max_cap[2]} in {max_cap[1]} - {max_cap[4]} power plant, capacity (MW): {max_cap[3]}"
 
+    # create bar plot for fuels data
     def bar_plot(query, title='', label_x='', label_y=''):
         cur.execute(query)
 
@@ -229,6 +262,7 @@ def home():
                     title='Performance of different kinds of power plants',
                     label_x='Type of power plant', label_y='Average capacity (MW)')
 
+    # scatter plot using generated energy data
     def year_plot(data, category, log_y1=False, log_y2=False, label_y='', label_c=''):
         caps_rep = []
         for i in range(0, 7):
@@ -251,6 +285,7 @@ def home():
 
         return fig_rep, fig_est
 
+    # compare generation of electricity by different fuels
     cur.execute("""SELECT primary_fuel, sum(generation_gwh_2013), sum(generation_gwh_2014),
                     sum(generation_gwh_2015), sum(generation_gwh_2016), sum(generation_gwh_2017), 
                     sum(generation_gwh_2018), sum(generation_gwh_2019), sum(estimated_generation_gwh_2013), 
@@ -273,7 +308,7 @@ def home():
     fig6, fig7 = year_plot([row[13:25] for row in data2], fuels, label_y='Average generated energy (GWh)',
                            label_c='Type of power plant')
 
-
+    # compare generation of electricity by different countries
     cur.execute("""SELECT country_long, sum(generation_gwh_2013), sum(generation_gwh_2014),
                     sum(generation_gwh_2015), sum(generation_gwh_2016), sum(generation_gwh_2017), 
                     sum(generation_gwh_2018), sum(generation_gwh_2019), sum(estimated_generation_gwh_2013), 
